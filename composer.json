@@ -1,0 +1,36 @@
+{
+    "name": "ecedi/utmze",
+    "type": "javascript tool",
+    "description": "a source and campaign tracking alternative to Google Analytics UTMZ",
+    "keywords": ["utmz","source", "campaign", "php", "javascript", "ecedi"],
+    "homepage": "http://github.com/ecedi/utmze",
+    "license": "MIT",
+
+    "authors": [
+        {
+            "name": "Ecedi Team",
+            "homepage": "http://ecedi.fr"
+        },
+        {
+            "name": "Community",
+            "homepage": "http://github.com/ecedi/utmze/graphs/contributors"
+        }
+    ],
+
+    "require": {
+        "php":                      ">=5.3.3"
+    },
+
+    "autoload": {
+        "psr-0": {
+            "Ecedi\\Utmze": ""
+        }
+    },
+    "target-dir": "Ecedi/Utmze",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "stable",
+            "dev-devel": "devel"
+        }
+    }
+}
