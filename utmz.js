@@ -3,12 +3,16 @@
 /* global console */
 /* global document */
 
-var doms;
 // require jquery and jquery-cookie
 (function($){
     $.fn.utmz = function(){
         
-
+        /**
+         * parse document.location.search pour en extraire les param GET
+         * 
+         * @param  {[type]} qs [description]
+         * @return {[type]}    [description]
+         */
         var _getQueryParams = function (qs) {
             qs = qs.split('+').join(' ');
 
@@ -22,6 +26,12 @@ var doms;
             return params;
         };
         
+        /**
+         * extrait d'une uri tous les fragments
+         * 
+         * @param  {[type]} url [description]
+         * @return {[type]}     [description]
+         */
         var _parseUrl = function(url) {
             var parser = document.createElement('a'),
             searchObject = {},
@@ -48,8 +58,19 @@ var doms;
             };
         };
 
+        /**
+         * créer une liste de domaine à partir d'un domain complet.
+         * ex si le domaine c'est client.inte.paris.ecedi.fr cela retourne un tableau de domaine suivant
+         * ['.ecedi.fr', '.paris.ecedi.fr', '.inte.paris.ecedi.fr', 'client.inte.paris.ecedi.fr']
+         *
+         * l'idée c'est de produire une liste de domaine ou l'on pourra essayer d'écrire, du plus large au plus précis 
+         * cela corresponds à la logique de Google Analytics Universal pour l'écriture des cookies
+         * 
+         * @param  {string} domain [description]
+         * @return {array}        tableau de sous-domaine
+         */
         var _listSubDomains = function(domain) {
-            doms = domain.split('.');
+            var doms = domain.split('.');
             if(doms.length <= 2 ) {
                 return [domain];
             }
@@ -57,22 +78,33 @@ var doms;
             var output = [];
             var i = doms.length -1 ;
             var tmp= '';
-            //create an array
+            
             for (i ; i >=0 ; i--) {
                 tmp =  '.' + doms[i] + tmp;
                 output.push(tmp);
             }
             //remove first item
-            //output.shift();
+            output.shift();
             return output;
 
         };
 
+        /**
+         * écriture du cookie
+         * 
+         * @param  {object} data    la structure de donnée utmz a écrire
+         * @param  {array} domains liste des domains ou il faut écrire ce cookie
+         * @return {void}
+         */
         var _write = function(data, domains) {
 
             var _format = function(data) {
 
-                //a simple js hash function to encode domain
+                /**
+                 * a simple js hash function to encode domain
+                 * @param  {[type]} d [description]
+                 * @return {[type]}   [description]
+                 */
                 var _hash = function(d){
                     var a=1,c=0,h,o;
                     if(d){
@@ -96,10 +128,10 @@ var doms;
 
             var formatedCookie = _format(data);
 
-            console.log(formatedCookie);
+            // console.log(formatedCookie);
 
             $(domains).each(function(index, value) {
-                console.log('domain: ' + value);
+                // console.log('domain: ' + value);
                 $.cookie.raw = true;
                 return $.cookie('__utmze', formatedCookie, { expires: 182, domain: value });
             });
@@ -119,8 +151,6 @@ var doms;
         var get = _getQueryParams(document.location.search);
         
         var _utmz = {utmcsr : oldCookie.source||false, utmccn: oldCookie.campaign||false, utmcmd: oldCookie.medium||false };
-
-        console.log(get);
 
         var myDomain = _parseUrl(document.domain).hostname;
 
