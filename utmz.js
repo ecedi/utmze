@@ -3,9 +3,11 @@
 /* global console */
 /* global document */
 
+var doms;
 // require jquery and jquery-cookie
 (function($){
     $.fn.utmz = function(){
+        
 
         var _getQueryParams = function (qs) {
             qs = qs.split('+').join(' ');
@@ -46,11 +48,69 @@
             };
         };
 
-        //utmz code
-        var oldCookie = {source : false, campaign: false, medium: false};
+        var _listSubDomains = function(domain) {
+            doms = domain.split('.');
+            if(doms.length <= 2 ) {
+                return [domain];
+            }
+
+            var output = [];
+            var i = doms.length -1 ;
+            var tmp= '';
+            //create an array
+            for (i ; i >=0 ; i--) {
+                tmp =  '.' + doms[i] + tmp;
+                output.push(tmp);
+            }
+            //remove first item
+            //output.shift();
+            return output;
+
+        };
+
+        var _write = function(data, domains) {
+
+            var _format = function(data) {
+
+                //a simple js hash function to encode domain
+                var _hash = function(d){
+                    var a=1,c=0,h,o;
+                    if(d){
+                        a=0;
+                        for(h=d['length']-1;h>=0;h--){
+                            o=d.charCodeAt(h);
+                            a=(a<<6&268435455)+o+(o<<14);
+                            c=a&266338304;
+                            a=c!=0?a^c>>21:a
+                        }
+                    }
+                    return a;
+                };
+
+                var domainHash = '', timestamp = Date.now(), session=6, campaign=1, cData='';
+
+                //flatten data object
+                cData = 'utmcsr='+data.utmcsr+'|utmccn='+data.utmccn+'|utmcmd='+data.utmcmd;
+                return _hash(document.domain) +'.'+ timestamp + '.' + session + '.' + campaign + '.' + cData;
+            };
+
+            var formatedCookie = _format(data);
+
+            console.log(formatedCookie);
+
+            $(domains).each(function(index, value) {
+                console.log('domain: ' + value);
+                $.cookie.raw = true;
+                return $.cookie('__utmze', formatedCookie, { expires: 182, domain: value });
+            });
+        };
+
+        //utmz code {source, name, medium}
+        var oldCookie = {utmcsr : false, utmccn: false, utmcmd: false};
 
         if($.cookie('__utmze')) {
-            oldCookie = JSON.parse($.cookie('__utmze'));
+            //TODO ici il faut reverse parser le cookie?
+            oldCookie = $.cookie('__utmze');
         }
         
         console.log('read cookie');
@@ -58,7 +118,7 @@
 
         var get = _getQueryParams(document.location.search);
         
-        var _utmz = {source : oldCookie.source, campaign: oldCookie.campaign, medium: oldCookie.medium };
+        var _utmz = {utmcsr : oldCookie.source||false, utmccn: oldCookie.campaign||false, utmcmd: oldCookie.medium||false };
 
         console.log(get);
 
@@ -69,24 +129,24 @@
         // sinon on prend le domain issue du referrer
         // si le referrer est vide, on met (organic) par defaut
         if(get.hasOwnProperty('utm_source') ) {
-            _utmz.source = get.utm_source;
+            _utmz.utmcsr = get.utm_source;
         } else {
             var referrerDomain = _parseUrl(document.referrer).hostname;
 
             //find source source is referrer if not same domain
             if( referrerDomain === myDomain) {
-                _utmz.source = oldCookie.source || false;
+                _utmz.utmcsr = oldCookie.utmcsr || false;
             } else {
-                _utmz.source = referrerDomain;
+                _utmz.utmcsr = referrerDomain;
             }
 
             //si pas de referrer on considère organic
-            if(_utmz.source === '') {
-                _utmz.source = '(direct)';
+            if(_utmz.utmcsr === '') {
+                _utmz.utmcsr = '(direct)';
             }
 
-            if(_utmz.source === false) {
-                _utmz.source = '(organic)';
+            if(_utmz.utmcsr === false) {
+                _utmz.utmcsr = '(organic)';
             }
             
         }
@@ -94,32 +154,17 @@
 
         // #campaign OK
         if(get.hasOwnProperty('utm_campaign')) {
-            _utmz.campaign = get.utm_campaign;
+            _utmz.utmccn = get.utm_campaign;
         }
 
         // medium on écrase le medium si il est dans l'url
         if(get.hasOwnProperty('utm_medium')) {
-            _utmz.medium = get.utm_medium;
+            _utmz.utmcmd = get.utm_medium;
         }
 
-
-        var _listSubDomains = function(domain) {
-            var doms = domain.split('.');
-            console.log(doms);
-
-        };
-
-        $.cookie.json = true;
-        //write cookie for 6 month
-        //TODO try to write on lower domains first
-        var writeDomains = _listSubDomains(myDomain);
-        
-        console.log('write cookie');
         console.log(_utmz);
-
-        $.cookie('__utmze', _utmz, { expires: 182, domain: '.loc' });
-        
-
+        var writeDomains = _listSubDomains(myDomain);
+        _write(_utmz, writeDomains);
         
         return this;
     };
