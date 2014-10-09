@@ -5,7 +5,9 @@
 
 // require jquery and jquery-cookie
 (function($){
-    $.fn.utmz = function(){
+    $.fn.utmz = function(options){
+
+         var opts = $.extend( {}, $.fn.utmz.defaults, options );
         
         /**
          * parse document.location.search pour en extraire les param GET
@@ -66,7 +68,7 @@
          * l'idée c'est de produire une liste de domaine ou l'on pourra essayer d'écrire, du plus large au plus précis 
          * cela corresponds à la logique de Google Analytics Universal pour l'écriture des cookies
          * 
-         * @param  {string} domain [description]
+         * @param  {string} domain a domain name
          * @return {array}        tableau de sous-domaine
          */
         var _listSubDomains = function(domain) {
@@ -90,15 +92,12 @@
         };
 
         /**
-         * écriture du cookie
+         * format the json object as a proper utmz value
          * 
-         * @param  {object} data    la structure de donnée utmz a écrire
-         * @param  {array} domains liste des domains ou il faut écrire ce cookie
-         * @return {void}
+         * @param  {object} data the utmz v
+         * @return {string} the cookie value, mocking _utmz format
          */
-        var _write = function(data, domains) {
-
-            var _format = function(data) {
+        var _serialize = function (data) {
 
                 /**
                  * a simple js hash function to encode domain
@@ -109,40 +108,66 @@
                     var a=1,c=0,h,o;
                     if(d){
                         a=0;
-                        for(h=d['length']-1;h>=0;h--){
+                        for(h=d.length-1;h>=0;h--){
                             o=d.charCodeAt(h);
                             a=(a<<6&268435455)+o+(o<<14);
                             c=a&266338304;
-                            a=c!=0?a^c>>21:a
+                            a=c!==0?a^c>>21:a;
                         }
                     }
                     return a;
                 };
 
-                var domainHash = '', timestamp = Date.now(), session=6, campaign=1, cData='';
+                var timestamp = Date.now(), session=6, campaign=1, cData= '';
 
                 //flatten data object
                 cData = 'utmcsr='+data.utmcsr+'|utmccn='+data.utmccn+'|utmcmd='+data.utmcmd;
                 return _hash(document.domain) +'.'+ timestamp + '.' + session + '.' + campaign + '.' + cData;
-            };
 
-            var formatedCookie = _format(data);
+        };
 
-            // console.log(formatedCookie);
+        /**
+         * format a utmz cookie string into a json object
+         * @param  {string} str _utmz cookie value
+         * @return {object} 
+         */
+        var _deserialize = function(str) {
+            var pairs = str.split('.').slice(4).join('.').split('|');
+            var ga = {};
+            for (var i = 0; i < pairs.length; i++) {
+                var temp = pairs[i].split('=');
+                ga[temp[0]] = temp[1];
+            }
+            return ga;
+        };
+        
+        /**
+         * écriture du cookie
+         * 
+         * @param  {object} data    la structure de donnée utmz a écrire
+         * @param  {array} domains liste des domains ou il faut écrire ce cookie
+         * @return {void}
+         */
+        var _write = function(data, domains) {
 
-            $(domains).each(function(index, value) {
-                // console.log('domain: ' + value);
-                $.cookie.raw = true;
-                return $.cookie('__utmze', formatedCookie, { expires: 182, domain: value });
-            });
+            var formatedCookie = _serialize(data);
+
+            $.cookie.raw = true;
+
+            if(opts.domainName === 'auto') {
+                $(domains).each(function(index, value) {
+                    return $.cookie(opts.cookieName, formatedCookie, { expires: opts.expires, domain: value, path: opts.cookiePath  });
+                });
+            } else {
+                return $.cookie(opts.cookieName, formatedCookie, { expires: opts.expires, domain: opts.domainName, path: opts.cookiePath });
+            }
         };
 
         //utmz code {source, name, medium}
         var oldCookie = {utmcsr : false, utmccn: false, utmcmd: false};
 
-        if($.cookie('__utmze')) {
-            //TODO ici il faut reverse parser le cookie?
-            oldCookie = $.cookie('__utmze');
+        if($.cookie(opts.cookieName)) {
+            oldCookie = _deserialize($.cookie(opts.cookieName));
         }
         
         console.log('read cookie');
@@ -150,7 +175,7 @@
 
         var get = _getQueryParams(document.location.search);
         
-        var _utmz = {utmcsr : oldCookie.source||false, utmccn: oldCookie.campaign||false, utmcmd: oldCookie.medium||false };
+        var _utmz = {utmcsr : oldCookie.utmcsr||false, utmccn: oldCookie.utmccn||false, utmcmd: oldCookie.utmcmd||false };
 
         var myDomain = _parseUrl(document.domain).hostname;
 
@@ -162,7 +187,8 @@
             _utmz.utmcsr = get.utm_source;
         } else {
             var referrerDomain = _parseUrl(document.referrer).hostname;
-
+            console.log('referrer domain: ' + referrerDomain);
+            console.log('current  domain: ' + myDomain);
             //find source source is referrer if not same domain
             if( referrerDomain === myDomain) {
                 _utmz.utmcsr = oldCookie.utmcsr || false;
@@ -181,8 +207,7 @@
             
         }
 
-
-        // #campaign OK
+        // #campaign
         if(get.hasOwnProperty('utm_campaign')) {
             _utmz.utmccn = get.utm_campaign;
         }
@@ -193,9 +218,18 @@
         }
 
         console.log(_utmz);
+
         var writeDomains = _listSubDomains(myDomain);
         _write(_utmz, writeDomains);
         
         return this;
+    };
+
+    // Plugin defaults – added as a property on our plugin function.
+    $.fn.utmz.defaults = {
+        domainName: 'auto',
+        cookiePath: '/',
+        expires: 182,
+        cookieName: '__utmze'
     };
 }(jQuery));
