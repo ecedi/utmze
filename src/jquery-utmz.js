@@ -169,10 +169,6 @@
         if($.cookie(opts.cookieName)) {
             oldCookie = _deserialize($.cookie(opts.cookieName));
         }
-        
-        console.log('read cookie');
-        console.log(oldCookie);
-
         var get = _getQueryParams(document.location.search);
         
         var _utmz = {utmcsr : oldCookie.utmcsr||false, utmccn: oldCookie.utmccn||false, utmcmd: oldCookie.utmcmd||false };
@@ -187,24 +183,17 @@
             _utmz.utmcsr = get.utm_source;
         } else {
             var referrerDomain = _parseUrl(document.referrer).hostname;
-            console.log('referrer domain: ' + referrerDomain);
-            console.log('current  domain: ' + myDomain);
+
             //find source source is referrer if not same domain
             if( referrerDomain === myDomain) {
-                _utmz.utmcsr = oldCookie.utmcsr || false;
+                _utmz.utmcsr = oldCookie.utmcsr || '(direct)';
             } else {
                 _utmz.utmcsr = referrerDomain;
             }
 
-            //si pas de referrer on considère organic
-            if(_utmz.utmcsr === '') {
-                _utmz.utmcsr = '(direct)';
-            }
-
             if(_utmz.utmcsr === false) {
                 _utmz.utmcsr = '(organic)';
-            }
-            
+            }            
         }
 
         // #campaign
@@ -216,8 +205,6 @@
         if(get.hasOwnProperty('utm_medium')) {
             _utmz.utmcmd = get.utm_medium;
         }
-
-        console.log(_utmz);
 
         var writeDomains = _listSubDomains(myDomain);
         _write(_utmz, writeDomains);
