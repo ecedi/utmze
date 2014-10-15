@@ -96,9 +96,9 @@ If website domain is client.inte.paris.ecedi.fr jquery-utmz will try to write (i
 
 specify the cookie path 
 
-### expires (default: 182)
+### expires (default: 61)
 
-define the max age of the utmz cookie, 6 month by default (182 days)
+define the max age of the utmz cookie, 2 month by default (61 days)
 
 ```javascript
 <script type="text/javascript">
@@ -117,7 +117,7 @@ If you know what you are doing you can override to use the __utmz name
 ```javascript
 <script type="text/javascript">
     $(document).ready(function() {
-        $().utmz({ cookieNmae: '__utmz'});
+        $().utmz({ cookieName: '__utmz'});
     }
 </script>
 ```

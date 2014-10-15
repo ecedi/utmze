@@ -216,7 +216,7 @@
     $.fn.utmz.defaults = {
         domainName: 'auto',
         cookiePath: '/',
-        expires: 182,
+        expires: 61,
         cookieName: '__utmze'
     };
 }(jQuery));
