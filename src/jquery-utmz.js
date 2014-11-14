@@ -1,6 +1,5 @@
 'use strict';
 /* global jQuery */
-/* global console */
 /* global document */
 
 // require jquery and jquery-cookie
@@ -178,7 +177,6 @@
         // # source simple sticky               
         if(get.hasOwnProperty('utm_source') ) {
             _utmz.utmcsr = get.utm_source;
-        }
         }
 
         // #campaign
