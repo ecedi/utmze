@@ -35,16 +35,7 @@ medium aka utmcmd is false by default, when a GET parameter utm_medium is set, i
 ### source behavior
 
 Source aka utmcsr is a little bit more tricky:
-
-We got 4 values to consider
-  * utm_source GET parameters
-  * current domain
-  * referrer domain
-  * last visit source
-
-utm_source GET parameters will override any other value/behavior and will be stored whatever the other values are
-
-TODO define and explain the precedence rules
+it is (direct) by default,when a GET parameter utm_source is set, it will be stored and stick until another utm_source is found
 
 ## Usage
 

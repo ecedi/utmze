@@ -164,36 +164,21 @@
         };
 
         //utmz code {source, name, medium}
-        var oldCookie = {utmcsr : false, utmccn: false, utmcmd: false};
+        var oldCookie = {utmcsr : '(direct)', utmccn: false, utmcmd: false};
 
         if($.cookie(opts.cookieName)) {
             oldCookie = _deserialize($.cookie(opts.cookieName));
         }
         var get = _getQueryParams(document.location.search);
         
-        var _utmz = {utmcsr : oldCookie.utmcsr||false, utmccn: oldCookie.utmccn||false, utmcmd: oldCookie.utmcmd||false };
+        var _utmz = {utmcsr : oldCookie.utmcsr||'(direct)', utmccn: oldCookie.utmccn||false, utmcmd: oldCookie.utmcmd||false };
 
         var myDomain = _parseUrl(document.domain).hostname;
 
-        // # source 
-        // soit il est dans l'url et il prime
-        // sinon on prend le domain issue du referrer
-        // si le referrer est vide, on met (organic) par defaut
+        // # source simple sticky               
         if(get.hasOwnProperty('utm_source') ) {
             _utmz.utmcsr = get.utm_source;
-        } else {
-            var referrerDomain = _parseUrl(document.referrer).hostname;
-
-            //find source source is referrer if not same domain
-            if( referrerDomain === myDomain) {
-                _utmz.utmcsr = oldCookie.utmcsr || '(direct)';
-            } else {
-                _utmz.utmcsr = referrerDomain;
-            }
-
-            if(_utmz.utmcsr === false) {
-                _utmz.utmcsr = '(organic)';
-            }            
+        }
         }
 
         // #campaign
