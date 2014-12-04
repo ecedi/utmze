@@ -9,10 +9,10 @@
          var opts = $.extend( {}, $.fn.utmz.defaults, options );
         
         /**
-         * parse document.location.search pour en extraire les param GET
+         * parse document.location.search to extract GET parameters
          * 
-         * @param  {[type]} qs [description]
-         * @return {[type]}    [description]
+         * @param  string qs query string
+         * @return array  array of GET parameters
          */
         var _getQueryParams = function (qs) {
             qs = qs.split('+').join(' ');
@@ -28,10 +28,10 @@
         };
         
         /**
-         * extrait d'une uri tous les fragments
+         * extract uri fragments (protocol, host, port, pathname, search, hash)
          * 
-         * @param  {[type]} url [description]
-         * @return {[type]}     [description]
+         * @param  string url an uri
+         * @return object uri fragments
          */
         var _parseUrl = function(url) {
             var parser = document.createElement('a'),
@@ -60,15 +60,15 @@
         };
 
         /**
-         * créer une liste de domaine à partir d'un domain complet.
-         * ex si le domaine c'est client.inte.paris.ecedi.fr cela retourne un tableau de domaine suivant
+         * Create a list of sub-domaines
+         * ex if client domain is 'client.inte.paris.ecedi.fr' it will return an arryay like
          * ['.ecedi.fr', '.paris.ecedi.fr', '.inte.paris.ecedi.fr', 'client.inte.paris.ecedi.fr']
          *
-         * l'idée c'est de produire une liste de domaine ou l'on pourra essayer d'écrire, du plus large au plus précis 
-         * cela corresponds à la logique de Google Analytics Universal pour l'écriture des cookies
+         * The id is to produce a list of domainew where we will try to write the cookie. An attempt to
+         * replicate  Google Analytics Universal 'auto' cookie domain discovery
          * 
-         * @param  {string} domain a domain name
-         * @return {array}        tableau de sous-domaine
+         * @param  string domain a fqdn
+         * @return array  list of subdomain available to write cookie to
          */
         var _listSubDomains = function(domain) {
             var doms = domain.split('.');
@@ -100,8 +100,8 @@
 
                 /**
                  * a simple js hash function to encode domain
-                 * @param  {[type]} d [description]
-                 * @return {[type]}   [description]
+                 * @param  string d the string to hash
+                 * @return string the hash
                  */
                 var _hash = function(d){
                     var a=1,c=0,h,o;
@@ -141,10 +141,10 @@
         };
         
         /**
-         * écriture du cookie
+         * write cookie
          * 
-         * @param  {object} data    la structure de donnée utmz a écrire
-         * @param  {array} domains liste des domains ou il faut écrire ce cookie
+         * @param  {object} data    the json object to write as a cookie string
+         * @param  {array} domains  list of domains to write cookie in
          * @return {void}
          */
         var _write = function(data, domains) {
