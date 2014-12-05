@@ -177,6 +177,28 @@
         // # source simple sticky               
         if(get.hasOwnProperty('utm_source') ) {
             _utmz.utmcsr = get.utm_source;
+        } else {
+            //if not explicit utm_source and we have a direct (i.e no cookie before)
+            //we put referer as sticky
+            if(_utmz.utmcsr === '(direct)') {
+                var referrer = _parseUrl(document.referrer).hostname;
+                if(referrer !== '') {
+                    //we test popular search engines
+                    var GOOGLE = /www.google/;
+                    var YAHOO = /search.yahoo/;
+                    var BING = /www.bing/;
+                    if(GOOGLE.test(referrer)){
+                        _utmz.utmcsr = 'Google Search';
+                    } else if(YAHOO.test(referrer)){
+                        _utmz.utmcsr = 'Yahoo Search';
+                    } else if(BING.test(referrer)){
+                        _utmz.utmcsr = 'Bing Search';
+                    } else {
+                        //otherwise we set the referrer as is
+                        _utmz.utmcsr = referrer;
+                    }
+                }
+            }
         }
 
         // #campaign
